@@ -381,49 +381,73 @@ class HiddenMarkovModel:
                 for xt in range(self.D):
                     self.O[curr][xt] = O_num[curr][xt] / O_den[curr]
 
-    def generate_emission(self, M):
+    def generate_emission(self, M, syll_count = -1, seed = -1, syll_dict = {}):
         '''
-        Generates an emission of length M, assuming that the starting state
-        is chosen uniformly at random. 
+        Generates an emission of syllable count syll_count, assuming that the starting state
+        is chosen based off of the given seed. 
 
         Arguments:
             M:          Length of the emission to generate.
-
+            syll_count: Syllables of emission to generate
+            seed:       Starting observation
+            syll_dict:  Dictionary of syllable counts for emission generation
         Returns:
             emission:   The randomly generated emission as a list.
 
             states:     The randomly generated states as a list.
         '''
+        
+        if syll_count == -1:
+            emission = []
+            state = random.choice(range(self.L))
+            states = []
 
-        emission = []
-        state = random.choice(range(self.L))
-        states = []
+            for t in range(M):
+                # Append state.
+                states.append(state)
 
-        for t in range(M):
-            # Append state.
-            states.append(state)
+                # Sample next observation.
+                rand_var = random.uniform(0, 1)
+                next_obs = 0
 
-            # Sample next observation.
-            rand_var = random.uniform(0, 1)
-            next_obs = 0
+                while rand_var > 0:
+                    rand_var -= self.O[state][next_obs]
+                    next_obs += 1
 
-            while rand_var > 0:
-                rand_var -= self.O[state][next_obs]
-                next_obs += 1
+                next_obs -= 1
+                emission.append(next_obs)
 
-            next_obs -= 1
-            emission.append(next_obs)
+                # Sample next state.
+                rand_var = random.uniform(0, 1)
+                next_state = 0
 
-            # Sample next state.
-            rand_var = random.uniform(0, 1)
-            next_state = 0
+                while rand_var > 0:
+                    rand_var -= self.A[state][next_state]
+                    next_state += 1
 
-            while rand_var > 0:
-                rand_var -= self.A[state][next_state]
-                next_state += 1
-
-            next_state -= 1
-            state = next_state
+                next_state -= 1
+                state = next_state
+        else:
+            emission = [seed]
+            state = np.argmax(self.O[:][seed])
+            states = []
+            
+            while syll_count < 10:
+                # Append state.
+                states.append(state)
+                
+                
+                # At this point, we start restricting the probabilities
+                if syll_count >= 5:
+                    accept_obs = []
+                    
+                    for syll_num in syll_dict:
+                        if syll_num <= 10 - syll_count:
+                            accept_obs.extend(syll_dict[syll_num])
+                    
+                    A_tot = np.sum([self.A[state] for i in good_indices])
+                    
+                
 
         return emission, states
 
