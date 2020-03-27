@@ -7,6 +7,7 @@
 ########################################
 
 import random
+import numpy as np
 
 class HiddenMarkovModel:
     '''
@@ -394,38 +395,18 @@ class HiddenMarkovModel:
 
             states:     The randomly generated states as a list.
         '''
+        
+        emission = np.zeros(M)
+        states = np.zeros(M)
+        
+        states[0] = np.random.choice(self.L, 1, p = self.A_start)
+        emission[0] = np.random.choice(self.D, 1, p = self.O[int(states[0])])
 
-        emission = []
-        state = random.choice(range(self.L))
-        states = []
+        for i in range(1, M):
+            states[i] = np.random.choice(self.L, 1, p = self.A[int(states[i - 1])])
+            emission[i] = np.random.choice(self.D, 1, p = self.O[int(states[i - 1])])
 
-        for t in range(M):
-            # Append state.
-            states.append(state)
-
-            # Sample next observation.
-            rand_var = random.uniform(0, 1)
-            next_obs = 0
-
-            while rand_var > 0:
-                rand_var -= self.O[state][next_obs]
-                next_obs += 1
-
-            next_obs -= 1
-            emission.append(next_obs)
-
-            # Sample next state.
-            rand_var = random.uniform(0, 1)
-            next_state = 0
-
-            while rand_var > 0:
-                rand_var -= self.A[state][next_state]
-                next_state += 1
-
-            next_state -= 1
-            state = next_state
-
-        return emission, states
+        return emission.tolist(), states.tolist()
 
 
     def probability_alphas(self, x):
