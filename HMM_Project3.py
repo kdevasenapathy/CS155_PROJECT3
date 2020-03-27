@@ -382,118 +382,31 @@ class HiddenMarkovModel:
                 for xt in range(self.D):
                     self.O[curr][xt] = O_num[curr][xt] / O_den[curr]
 
-    def generate_emission(self, M = 0, syll_count = -1, seed = -1, syll_dict = {}, o2s_dict = {}):
+    def generate_emission(self, M):
         '''
-        Generates an emission of syllable count syll_count, assuming that the starting state
-        is chosen based off of the given seed. 
+        Generates an emission of length M, assuming that the starting state
+        is chosen uniformly at random. 
 
         Arguments:
             M:          Length of the emission to generate.
-            syll_count: Syllables of emission to generate
-            seed:       Starting observation
-            syll_dict:  Dictionary of syllable counts for emission generation
+
         Returns:
             emission:   The randomly generated emission as a list.
 
             states:     The randomly generated states as a list.
         '''
         
-        if syll_count == -1:
-            emission = []
-            state = random.choice(range(self.L))
-            states = []
+        emission = np.zeros(M)
+        states = np.zeros(M)
+        
+        states[0] = np.random.choice(self.L, 1, p = self.A_start)
+        emission[0] = np.random.choice(self.D, 1, p = self.O[int(states[0])])
 
-            for t in range(M):
-                # Append state.
-                states.append(state)
+        for i in range(1, M):
+            states[i] = np.random.choice(self.L, 1, p = self.A[int(states[i - 1])])
+            emission[i] = np.random.choice(self.D, 1, p = self.O[int(states[i - 1])])
 
-                # Sample next observation.
-                rand_var = random.uniform(0, 1)
-                next_obs = 0
-
-                while rand_var > 0:
-                    rand_var -= self.O[state][next_obs]
-                    next_obs += 1
-
-                next_obs -= 1
-                emission.append(next_obs)
-
-                # Sample next state.
-                rand_var = random.uniform(0, 1)
-                next_state = 0
-
-                while rand_var > 0:
-                    rand_var -= self.A[state][next_state]
-                    next_state += 1
-
-                next_state -= 1
-                state = next_state
-        else:
-            emission = [seed]
-            state = np.argmax(self.O[:][seed])
-            states = []
-            
-            while syll_count < 10:
-                # Append state.
-                states.append(state)
-                
-                # At this point, we start restricting the probabilities
-                if syll_count >= 5:
-                    accept_obs = []
-                    
-                    # Get a list of all the observations with 
-                    # acceptable syllable counts
-                    for syll_num in syll_dict:
-                        if syll_num <= 10 - syll_count:
-                            accept_obs.extend(syll_dict[syll_num])
-                    
-                    accept_obs = np.unique(accept_obs)
-                    # Get the total probability for the given state
-                    # across all of these acceptable observations
-                    O_tot = np.sum([self.O[state][i] for i in accept_obs])
-                    
-                    # Sample next observation.
-                    rand_var = random.uniform(0, O_tot)
-                    
-                    for i in range(accept_obs):
-                        rand_var -= self.O[state][accept_obs[i]]
-                        if rand_var <= 0:
-                            break
-                    
-                    next_obs = accept_obs[i - 1]
-                else:
-                     # Sample next observation.
-                    rand_var = random.uniform(0, 1)
-                    next_obs = 0
-
-                    while rand_var > 0:
-                        rand_var -= self.O[state][next_obs]
-                        next_obs += 1
-
-                    next_obs -= 1
-
-                emission.append(next_obs)
-                
-                # Increase the syllable count (using max possible, since
-                # Shakespeare says brevity is the soul of wit)
-                pos_counts = o2s_dict[next_obs]
-                for i in range(len(pos_counts)):
-                    if pos_counts[len(pos_counts) - i - 1] <= 10 - syll_count:
-                        syll_count += pos_counts[len(pos_counts) - i - 1]
-                        break
-                
-                # Sample next state.
-                rand_var = random.uniform(0, 1)
-                next_state = 0
-
-                while rand_var > 0:
-                    rand_var -= self.A[state][next_state]
-                    next_state += 1
-
-                next_state -= 1
-                state = next_state
-
-        return emission, states
+        return emission.tolist(), states.tolist()
 
 
     def probability_alphas(self, x):
