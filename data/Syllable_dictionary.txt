@@ -1,8 +1,8 @@
-'gainst 1
-'greeing E1 2
-'scaped 1
-'tis 1
-'twixt 1
+gainst 1
+greeing E1 2
+scaped 1
+tis 1
+twixt 1
 a 1
 a-doting E2 3
 abhor 2
@@ -2672,7 +2672,7 @@ swift-footed 3
 sword 1
 sworn 1
 sympathized 3
-t' 0
+th 0
 table 2
 tables 2
 take 1
@@ -2713,7 +2713,7 @@ term 1
 termed 1
 terms 1
 testy 2
-th' 0
+th 0
 than 1
 thank 1
 thanks 1
